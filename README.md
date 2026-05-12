@@ -12,8 +12,8 @@ Misafirler QR kod ile siteye girer, adlarını isterlerse yazar ve İdil & Burak
 - Her dosya için ayrı durum ve progress göstergesi
 - Türkçe, mobil öncelikli arayüz
 - Dosya validasyonu
-  - Fotoğraf: en fazla 250 MB
-  - Video: en fazla 1 GB
+  - Fotoğraf: en fazla 2 GB
+  - Video: en fazla 5 GB
   - Sadece `image/*` ve `video/*`
 - Dosya adı sanitize edilir
 - GitHub Pages ve GitHub Actions deploy desteği

@@ -296,7 +296,7 @@ export default function FileUploader() {
             Dosyalarınızı buraya sürükleyin ya da dokunarak seçin.
           </span>
           <span className="mt-3 text-xs font-medium text-stone-500">
-            JPG, PNG, HEIC, WEBP, MP4, MOV · Fotoğraf: 250 MB · Video: 1 GB
+            JPG, PNG, HEIC, WEBP, MP4, MOV · Fotoğraf: 2 GB · Video: 5 GB
           </span>
         </label>
 

@@ -1,7 +1,7 @@
 import { formatBytes } from './formatters';
 
-export const MAX_PHOTO_SIZE_BYTES = 250 * 1024 * 1024;
-export const MAX_VIDEO_SIZE_BYTES = 1024 * 1024 * 1024;
+export const MAX_PHOTO_SIZE_BYTES = 2 * 1024 * 1024 * 1024;
+export const MAX_VIDEO_SIZE_BYTES = 5 * 1024 * 1024 * 1024;
 
 const imageExtensions = new Set([
   'jpg',
