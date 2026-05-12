@@ -21,6 +21,7 @@ import {
 } from '../utils/fileValidation';
 
 const uploadUrl = import.meta.env.VITE_APPS_SCRIPT_UPLOAD_URL?.trim() ?? '';
+const maxParallelUploads = 2;
 const acceptedFileTypes = [
   'image/*',
   'video/*',
@@ -269,16 +270,27 @@ export default function FileUploader() {
     setGlobalMessage('');
     const uploadGroupId = createUploadGroupId();
 
-    for (const [index, item] of queuedItems.entries()) {
-      try {
-        await uploadSingleFile(item, index + 1, uploadGroupId);
-      } catch (error) {
-        updateItem(item.id, {
-          status: 'error',
-          progress: 100,
-          message: getFriendlyErrorMessage(error),
-        });
-      }
+    const indexedQueue = queuedItems.map((item, index) => ({
+      fileIndex: index + 1,
+      item,
+    }));
+
+    for (let start = 0; start < indexedQueue.length; start += maxParallelUploads) {
+      const batch = indexedQueue.slice(start, start + maxParallelUploads);
+
+      await Promise.all(
+        batch.map(async ({ fileIndex, item }) => {
+          try {
+            await uploadSingleFile(item, fileIndex, uploadGroupId);
+          } catch (error) {
+            updateItem(item.id, {
+              status: 'error',
+              progress: 100,
+              message: getFriendlyErrorMessage(error),
+            });
+          }
+        }),
+      );
     }
 
     resetFileInput();

@@ -10,6 +10,7 @@ Misafirler QR kod ile siteye girer, adlarını isterlerse yazar ve İdil & Burak
 - Drag & drop yükleme alanı
 - Misafir adı alanı, isteğe bağlı
 - Her dosya için ayrı durum ve progress göstergesi
+- Dosyalar 2'li gruplar halinde paralel yüklenir
 - Türkçe, mobil öncelikli arayüz
 - Dosya validasyonu
   - Fotoğraf: en fazla 2 GB
