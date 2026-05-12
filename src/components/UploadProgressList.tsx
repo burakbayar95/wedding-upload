@@ -100,18 +100,8 @@ export default function UploadProgressList({ items }: UploadProgressListProps) {
                   />
                 </div>
 
-                <div className="mt-2 flex flex-col gap-1 text-xs text-stone-500 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mt-2 text-xs text-stone-500">
                   <span>{item.message}</span>
-                  {item.response?.fileUrl && (
-                    <a
-                      className="font-medium text-blush-600 underline-offset-4 hover:underline"
-                      href={item.response.fileUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Drive'da aç
-                    </a>
-                  )}
                 </div>
               </div>
             </div>
