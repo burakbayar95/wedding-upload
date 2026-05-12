@@ -102,11 +102,21 @@ Her dosya için şu JSON gövdesi gönderilir:
   "guestName": "Misafir adı",
   "fileName": "orijinal-dosya-adi.jpg",
   "mimeType": "image/jpeg",
+  "fileIndex": 1,
+  "uploadGroupId": "20260512T183000-a1b2c3d4",
   "base64Data": "...."
 }
 ```
 
 Frontend bu JSON'u CORS preflight riskini azaltmak için `text/plain;charset=utf-8` content type ile gönderir. Apps Script tarafında yine JSON olarak parse edilir.
+
+Drive dosya adı şu yapıda oluşur:
+
+```text
+misafir-adi_001_orijinal-dosya-adi_uploadGroupId.jpg
+```
+
+Misafir adı boşsa `misafir` kullanılır. Aynı seçimdeki dosyalar aynı `uploadGroupId` ile gruplanır ve `001`, `002`, `003` şeklinde sıralanır.
 
 Beklenen başarılı yanıt:
 

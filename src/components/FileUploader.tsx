@@ -24,6 +24,11 @@ const uploadUrl = import.meta.env.VITE_APPS_SCRIPT_UPLOAD_URL?.trim() ?? '';
 const acceptedFileTypes = [
   'image/*',
   'video/*',
+  '.3fr',
+  '.arw',
+  '.cr2',
+  '.cr3',
+  '.dng',
   '.jpg',
   '.jpeg',
   '.png',
@@ -35,16 +40,45 @@ const acceptedFileTypes = [
   '.tif',
   '.tiff',
   '.avif',
-  '.mp4',
-  '.mov',
-  '.m4v',
-  '.webm',
+  '.nef',
+  '.orf',
+  '.pef',
+  '.raf',
+  '.raw',
+  '.rw2',
+  '.srw',
+  '.x3f',
   '.3gp',
   '.3g2',
   '.avi',
-  '.mpg',
+  '.flv',
+  '.hevc',
+  '.m2ts',
+  '.m4v',
+  '.mkv',
+  '.mov',
+  '.mp4',
   '.mpeg',
+  '.mpg',
+  '.mts',
+  '.mxf',
+  '.ts',
+  '.webm',
+  '.wmv',
 ].join(',');
+
+function createUploadGroupId() {
+  const timestamp = new Date()
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}Z$/, '');
+  const randomPart =
+    typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID().slice(0, 8)
+      : Math.random().toString(16).slice(2, 10);
+
+  return `${timestamp}-${randomPart}`;
+}
 
 function createUploadItem(file: File): UploadItem {
   const validation = validateUploadFile(file);
@@ -158,7 +192,11 @@ export default function FileUploader() {
     }
   };
 
-  const uploadSingleFile = async (item: UploadItem) => {
+  const uploadSingleFile = async (
+    item: UploadItem,
+    fileIndex: number,
+    uploadGroupId: string,
+  ) => {
     updateItem(item.id, {
       status: 'reading',
       progress: 5,
@@ -197,6 +235,8 @@ export default function FileUploader() {
         guestName: guestName.trim(),
         fileName: item.sanitizedFileName,
         mimeType: inferUploadMimeType(item.file),
+        fileIndex,
+        uploadGroupId,
         base64Data,
       };
       const response = await postUploadPayload(uploadUrl, payload);
@@ -227,10 +267,11 @@ export default function FileUploader() {
 
     setIsUploading(true);
     setGlobalMessage('');
+    const uploadGroupId = createUploadGroupId();
 
-    for (const item of queuedItems) {
+    for (const [index, item] of queuedItems.entries()) {
       try {
-        await uploadSingleFile(item);
+        await uploadSingleFile(item, index + 1, uploadGroupId);
       } catch (error) {
         updateItem(item.id, {
           status: 'error',
@@ -296,7 +337,7 @@ export default function FileUploader() {
             Dosyalarınızı buraya sürükleyin ya da dokunarak seçin.
           </span>
           <span className="mt-3 text-xs font-medium text-stone-500">
-            JPG, PNG, HEIC, WEBP, MP4, MOV · Fotoğraf: 2 GB · Video: 5 GB
+            JPG, RAW, HEIC, MP4, MOV · Fotoğraf: 2 GB · Video: 5 GB
           </span>
         </label>
 

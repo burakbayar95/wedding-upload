@@ -1,6 +1,11 @@
 const FOLDER_ID = 'GOOGLE_DRIVE_KLASOR_IDINIZ';
 
 const MIME_TYPES_BY_EXTENSION = {
+  '3fr': 'image/x-hasselblad-3fr',
+  arw: 'image/x-sony-arw',
+  cr2: 'image/x-canon-cr2',
+  cr3: 'image/x-canon-cr3',
+  dng: 'image/x-adobe-dng',
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',
   png: 'image/png',
@@ -12,15 +17,31 @@ const MIME_TYPES_BY_EXTENSION = {
   tif: 'image/tiff',
   tiff: 'image/tiff',
   avif: 'image/avif',
-  mp4: 'video/mp4',
-  mov: 'video/quicktime',
-  m4v: 'video/x-m4v',
-  webm: 'video/webm',
+  nef: 'image/x-nikon-nef',
+  orf: 'image/x-olympus-orf',
+  pef: 'image/x-pentax-pef',
+  raf: 'image/x-fuji-raf',
+  raw: 'image/x-raw',
+  rw2: 'image/x-panasonic-rw2',
+  srw: 'image/x-samsung-srw',
+  x3f: 'image/x-sigma-x3f',
   '3gp': 'video/3gpp',
   '3g2': 'video/3gpp2',
   avi: 'video/x-msvideo',
-  mpg: 'video/mpeg',
+  flv: 'video/x-flv',
+  hevc: 'video/hevc',
+  m2ts: 'video/mp2t',
+  m4v: 'video/x-m4v',
+  mkv: 'video/x-matroska',
+  mov: 'video/quicktime',
+  mp4: 'video/mp4',
   mpeg: 'video/mpeg',
+  mpg: 'video/mpeg',
+  mts: 'video/mp2t',
+  mxf: 'video/mxf',
+  ts: 'video/mp2t',
+  webm: 'video/webm',
+  wmv: 'video/x-ms-wmv',
 };
 
 function doGet() {
@@ -45,11 +66,12 @@ function doPost(e) {
     const guestName = sanitizeName(body.guestName || 'misafir') || 'misafir';
     const originalFileName = sanitizeFileName(body.fileName || 'dosya');
     const mimeType = normalizeMimeType(body.mimeType, originalFileName);
+    const fileIndex = normalizeFileIndex(body.fileIndex);
     const base64Data = stripDataUrlPrefix(String(body.base64Data || ''));
 
     if (!isAllowedMediaMimeType(mimeType)) {
       throw new Error(
-        'Sadece fotoğraf veya video dosyaları kabul edilir. JPG, JPEG, PNG, HEIC, HEIF, WEBP, MP4 ve MOV desteklenir.',
+        'Sadece fotoğraf, RAW fotoğraf veya video dosyaları kabul edilir.',
       );
     }
 
@@ -63,7 +85,15 @@ function doPost(e) {
       Session.getScriptTimeZone() || 'Europe/Istanbul',
       'yyyy-MM-dd_HH-mm-ss',
     );
-    const savedFileName = `${timestamp}_${guestName}_${originalFileName}`;
+    const uploadGroupId =
+      sanitizeName(body.uploadGroupId || `${timestamp}_${Utilities.getUuid().slice(0, 8)}`) ||
+      `${timestamp}_${Utilities.getUuid().slice(0, 8)}`;
+    const savedFileName = buildSavedFileName(
+      guestName,
+      fileIndex,
+      uploadGroupId,
+      originalFileName,
+    );
     const bytes = Utilities.base64Decode(base64Data);
     const blob = Utilities.newBlob(bytes, mimeType, savedFileName);
     const file = folder.createFile(blob);
@@ -119,11 +149,7 @@ function getFolderId(value) {
 function normalizeMimeType(mimeType, fileName) {
   const normalizedMimeType = String(mimeType || '').trim().toLowerCase();
 
-  if (
-    normalizedMimeType &&
-    normalizedMimeType !== 'application/octet-stream' &&
-    normalizedMimeType !== 'binary/octet-stream'
-  ) {
+  if (normalizedMimeType.indexOf('image/') === 0 || normalizedMimeType.indexOf('video/') === 0) {
     return normalizedMimeType === 'image/jpg' ? 'image/jpeg' : normalizedMimeType;
   }
 
@@ -141,6 +167,24 @@ function isAllowedMediaMimeType(mimeType) {
 function getFileExtension(fileName) {
   const match = String(fileName || '').toLowerCase().match(/\.([a-z0-9]+)$/);
   return match ? match[1] : '';
+}
+
+function normalizeFileIndex(value) {
+  const parsedIndex = parseInt(value, 10);
+  const safeIndex = isNaN(parsedIndex) || parsedIndex < 1 ? 1 : parsedIndex;
+  return String(safeIndex).padStart(3, '0');
+}
+
+function buildSavedFileName(guestName, fileIndex, uploadGroupId, originalFileName) {
+  const dotIndex = originalFileName.lastIndexOf('.');
+
+  if (dotIndex <= 0) {
+    return `${guestName}_${fileIndex}_${originalFileName}_${uploadGroupId}`;
+  }
+
+  const baseName = originalFileName.slice(0, dotIndex);
+  const extension = originalFileName.slice(dotIndex);
+  return `${guestName}_${fileIndex}_${baseName}_${uploadGroupId}${extension}`;
 }
 
 function sanitizeName(value) {

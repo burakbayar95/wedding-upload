@@ -4,6 +4,8 @@ export interface AppsScriptUploadPayload {
   guestName: string;
   fileName: string;
   mimeType: string;
+  fileIndex: number;
+  uploadGroupId: string;
   base64Data: string;
 }
 
