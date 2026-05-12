@@ -39,6 +39,8 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        # If this step says "Get Pages site failed", enable Pages first:
+        # Repository Settings > Pages > Build and deployment > Source: GitHub Actions
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4

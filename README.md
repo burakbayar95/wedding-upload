@@ -63,11 +63,27 @@ npm run build
 
 1. GitHub'da `wedding-upload` adlı repo oluşturun.
 2. Bu projeyi repo'ya push edin.
-3. Repo ayarlarında `Settings > Pages > Source` değerini `GitHub Actions` seçin.
+3. Repo ayarlarında `Settings > Pages > Build and deployment > Source` değerini `GitHub Actions` seçin.
 4. `Settings > Secrets and variables > Actions` altında secret ekleyin:
    - `VITE_APPS_SCRIPT_UPLOAD_URL`
    - İsterseniz `VITE_BASE_PATH` için `/wedding-upload/`
 5. `main` branch'e push edildiğinde `.github/workflows/deploy.yml` çalışır.
+
+### `Get Pages site failed` hatası
+
+GitHub Actions içinde `actions/configure-pages` adımı şu hatayı verirse:
+
+```text
+Get Pages site failed. Please verify that the repository has Pages enabled and configured to build using GitHub Actions.
+```
+
+Repo için GitHub Pages henüz etkin değildir. GitHub'da şu ayarı yapın:
+
+```text
+Repository > Settings > Pages > Build and deployment > Source > GitHub Actions
+```
+
+Bu ayardan sonra workflow'u yeniden çalıştırın veya `main` branch'e yeni bir push yapın.
 
 Yayın URL'si:
 
