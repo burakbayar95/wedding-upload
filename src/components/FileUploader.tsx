@@ -116,58 +116,32 @@ function getFriendlyErrorMessage(error: unknown) {
 async function postUploadPayload(
   endpointUrl: string,
   payload: AppsScriptUploadPayload,
-  onUploadProgress: (progress: number) => void,
 ) {
-  return new Promise<AppsScriptUploadResponse>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-
-    xhr.open('POST', endpointUrl, true);
-    xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
-
-    xhr.upload.onprogress = (event) => {
-      if (!event.lengthComputable) {
-        return;
-      }
-
-      onUploadProgress(Math.round((event.loaded / event.total) * 100));
-    };
-
-    xhr.onerror = () => {
-      reject(
-        new Error(
-          'Yükleme adresine ulaşılamadı. Apps Script Web App URL ve deploy ayarlarını kontrol edin.',
-        ),
-      );
-    };
-
-    xhr.onabort = () => {
-      reject(new Error('Yükleme iptal edildi.'));
-    };
-
-    xhr.onload = () => {
-      let parsedResponse: AppsScriptUploadResponse;
-
-      try {
-        parsedResponse = JSON.parse(xhr.responseText) as AppsScriptUploadResponse;
-      } catch {
-        reject(new Error('Sunucudan geçerli bir yanıt alınamadı.'));
-        return;
-      }
-
-      if (xhr.status < 200 || xhr.status >= 300 || !parsedResponse.success) {
-        reject(
-          new Error(
-            parsedResponse.error || 'Google Drive yüklemesi tamamlanamadı.',
-          ),
-        );
-        return;
-      }
-
-      resolve(parsedResponse);
-    };
-
-    xhr.send(JSON.stringify(payload));
+  const response = await fetch(endpointUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8',
+    },
+    body: JSON.stringify(payload),
+    redirect: 'follow',
   });
+
+  const responseText = await response.text();
+  let parsedResponse: AppsScriptUploadResponse;
+
+  try {
+    parsedResponse = JSON.parse(responseText) as AppsScriptUploadResponse;
+  } catch {
+    throw new Error('Sunucudan geçerli bir yanıt alınamadı.');
+  }
+
+  if (!response.ok || !parsedResponse.success) {
+    throw new Error(
+      parsedResponse.error || 'Google Drive yüklemesi tamamlanamadı.',
+    );
+  }
+
+  return parsedResponse;
 }
 
 export default function FileUploader() {
@@ -239,31 +213,46 @@ export default function FileUploader() {
 
     updateItem(item.id, {
       status: 'uploading',
-      progress: 55,
-      message: "Google Drive'a gönderiliyor... %0",
+      progress: 60,
+      message: "Google Drive'a gönderiliyor...",
     });
 
-    const payload: AppsScriptUploadPayload = {
-      guestName: guestName.trim(),
-      fileName: item.sanitizedFileName,
-      mimeType: inferUploadMimeType(item.file),
-      fileIndex,
-      uploadGroupId,
-      base64Data,
-    };
-    const response = await postUploadPayload(uploadUrl, payload, (progress) => {
+    const progressTimer = window.setInterval(() => {
+      setItems((currentItems) =>
+        currentItems.map((currentItem) => {
+          if (currentItem.id !== item.id || currentItem.status !== 'uploading') {
+            return currentItem;
+          }
+
+          return {
+            ...currentItem,
+            progress: Math.min(94, currentItem.progress + 2),
+            message: "Google Drive'a gönderiliyor...",
+          };
+        }),
+      );
+    }, 1200);
+
+    try {
+      const payload: AppsScriptUploadPayload = {
+        guestName: guestName.trim(),
+        fileName: item.sanitizedFileName,
+        mimeType: inferUploadMimeType(item.file),
+        fileIndex,
+        uploadGroupId,
+        base64Data,
+      };
+      const response = await postUploadPayload(uploadUrl, payload);
+
       updateItem(item.id, {
-        progress: Math.min(98, 55 + Math.round(progress * 0.43)),
-        message: `Google Drive'a gönderiliyor... %${progress}`,
+        status: 'success',
+        progress: 100,
+        message: 'Dosya başarıyla yüklendi.',
+        response,
       });
-    });
-
-    updateItem(item.id, {
-      status: 'success',
-      progress: 100,
-      message: 'Dosya başarıyla yüklendi.',
-      response,
-    });
+    } finally {
+      window.clearInterval(progressTimer);
+    }
   };
 
   const handleUpload = async () => {
